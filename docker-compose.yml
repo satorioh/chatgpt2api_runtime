@@ -1,20 +1,29 @@
+networks:
+  1panel-network:
+    external: true
+
 services:
   app:
-    image: ${CHATGPT2API_IMAGE:-ghcr.io/yukkcat/chatgpt2api:latest}
-    container_name: chatgpt2api
-    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: chatgpt2api-runtime:local
+    container_name: chatgpt2api-runtime
     ports:
-      - "${CHATGPT2API_PORT:-3000}:80"
+      - "6012:80"
     volumes:
-      - chatgpt2api-runtime:/app
       - ./data:/app/data
       - ./config.json:/app/config.json
+    networks:
+      - 1panel-network
     environment:
-      DATABASE_URL: ${DATABASE_URL:-}
-      CHATGPT2API_AUTH_KEY: ${CHATGPT2API_AUTH_KEY:-}
-      CHATGPT2API_BASE_URL: ${CHATGPT2API_BASE_URL:-}
-      CHATGPT2API_THREAD_TOKENS: ${CHATGPT2API_THREAD_TOKENS:-120}
-      TZ: ${TZ:-Asia/Shanghai}
+      DATABASE_URL: sqlite:////app/data/chatgpt2api.db
+    # 应用数据库；删除 DATABASE_URL 时同样默认使用 /app/data/chatgpt2api.db
+    #   DATABASE_URL: postgresql://user:password@host:5432/dbname
 
-volumes:
-  chatgpt2api-runtime:
+    # 认证密钥 (可选，覆盖 config.json)
+    #   CHATGPT2API_AUTH_KEY: your_secret_key
+
+    # 基础 URL (可选)
+    #   CHATGPT2API_BASE_URL: https://your-domain.com
+
